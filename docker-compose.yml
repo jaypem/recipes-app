@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  recipe-app:
+    build: .
+    container_name: recipe-app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./recipes.db:/app/recipes.db
+      - ./.env:/app/.env:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

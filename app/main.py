@@ -32,13 +32,16 @@ def post_generate(
     mode: str = Form(...),
     difficulty: int = Form(...),
     ingredient_load: int = Form(...),
+    servings: int = Form(...),
     ingredients: Optional[str] = Form(None),
 ):
     ing_list: List[str] = []
     if mode == "ingredients" and ingredients:
         ing_list = [s.strip() for s in ingredients.split(",") if s.strip()]
     try:
-        recipe: Recipe = generate_recipe(mode, ing_list, difficulty, ingredient_load)
+        recipe: Recipe = generate_recipe(
+            mode, ing_list, difficulty, ingredient_load, servings
+        )
     except Exception as e:
         return templates.TemplateResponse(
             "index.html", {"request": request, "error": str(e)}

@@ -1,12 +1,15 @@
 import os
 import json
-import re
+from .logger import get_logger
 from typing import List, Optional
 from .schemas import Recipe
 from google import genai
 from dotenv import load_dotenv
 
+
 load_dotenv()
+
+logger = get_logger("llm_client")
 
 LLM_BASE = os.getenv("LLM_API_BASE", "https://generativelanguage.googleapis.com/v1beta")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
@@ -28,85 +31,110 @@ def _get_client() -> genai.Client:
 
 
 def _prompt(
-    mode: str, ingredients: Optional[List[str]], difficulty: int, ingredient_load: int
+    mode: str,
+    ingredients: Optional[List[str]],
+    difficulty: int,
+    ingredient_load: int,
+    servings: int,
 ) -> str:
     return f"""Du bist ein Kochassistent. Liefere ein einziges valides JSON-Objekt für ein Rezept.
 Anforderungen:
 - Sprache: Deutsch
 - Felder: title, servings, time_minutes, difficulty (1-3), ingredient_load (1-3),
-  tags [min 1], ingredients [List], steps [nummerierte knappe Schritte]
+    tags [min 1], ingredients [List], steps [nummerierte knappe Schritte]
 - Schwierigkeit: 1=leicht, 2=mittel, 3=aufwendig
 - Zutatenmenge: 1=wenig (≈5-8), 2=mittel (≈9-14), 3=viele (15+)
+- Portionen: {servings}
 - {("Modus: ZUFALL. Ignoriere vorgegebene Zutaten." if mode == "random" else "Modus: ZUTATEN. Verwende zwingend diese Zutaten: " + ", ".join(ingredients or []))}
-- Passe das Rezept sinnvoll an die gewählte Schwierigkeit und Zutatenmenge an.
+- Passe das Rezept sinnvoll an die gewählte Schwierigkeit, Zutatenmenge und Portionenzahl an.
 - Übertreibe nicht mit exotischen Zutaten.
 - Ausgabe NUR JSON, keine Erklärungen.
 
 Beispielstruktur:
 {{
-  "title": "Pasta Aglio e Olio",
-  "servings": 2,
-  "time_minutes": 20,
-  "difficulty": 1,
-  "ingredient_load": 1,
-  "tags": ["pasta","schnell"],
-  "ingredients": ["200 g Spaghetti","3 Knoblauchzehen","Olivenöl","Chiliflocken","Petersilie","Salz"],
-  "steps": ["Wasser salzen und Spaghetti kochen.","Knoblauch in Öl sanft braten.","Spaghetti mit Öl, Chili, Petersilie mischen."]
+    "title": "Pasta Aglio e Olio",
+    "servings": 2,
+    "time_minutes": 20,
+    "difficulty": 1,
+    "ingredient_load": 1,
+    "tags": ["pasta","schnell"],
+    "ingredients": ["200 g Spaghetti","3 Knoblauchzehen","Olivenöl","Chiliflocken","Petersilie","Salz"],
+    "steps": ["Wasser salzen und Spaghetti kochen.","Knoblauch in Öl sanft braten.","Spaghetti mit Öl, Chili, Petersilie mischen."]
 }}
 """
 
 
 def generate_recipe(
-    mode: str, ingredients: Optional[List[str]], difficulty: int, ingredient_load: int
+    mode: str,
+    ingredients: Optional[List[str]],
+    difficulty: int,
+    ingredient_load: int,
+    servings: int,
 ) -> Recipe:
     if not GOOGLE_API_KEY:
+        logger.error("LLM_API_KEY fehlt. Bitte in .env setzen.")
         raise RuntimeError("LLM_API_KEY fehlt. Bitte in .env setzen.")
-    # Aufruf über den offiziellen Gemini-Python-Client
-    resp = _get_client().models.generate_content(
-        model=LLM_MODEL,
-        contents=[
-            {
-                "role": "user",
-                "parts": [
-                    {
-                        "text": "Du bist ein präziser Rezeptgenerator. Antworte ausschließlich mit JSON."
+    try:
+        logger.info(
+            f"Request: mode={mode}, ingredients={ingredients}, difficulty={difficulty}, ingredient_load={ingredient_load}"
+        )
+        resp = _get_client().models.generate_content(
+            model=LLM_MODEL,
+            contents=[
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": "Du bist ein präziser Rezeptgenerator. Antworte ausschließlich mit JSON."
+                        },
+                        {
+                            "text": _prompt(
+                                mode, ingredients, difficulty, ingredient_load, servings
+                            )
+                        },
+                    ],
+                }
+            ],
+            config={
+                "temperature": 0.7,
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string"},
+                        "servings": {"type": "integer"},
+                        "time_minutes": {"type": "integer"},
+                        "difficulty": {"type": "integer", "minimum": 1, "maximum": 3},
+                        "ingredient_load": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 3,
+                        },
+                        "tags": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "minItems": 1,
+                        },
+                        "ingredients": {"type": "array", "items": {"type": "string"}},
+                        "steps": {"type": "array", "items": {"type": "string"}},
                     },
-                    {"text": _prompt(mode, ingredients, difficulty, ingredient_load)},
-                ],
-            }
-        ],
-        config={
-            "temperature": 0.7,
-            "response_mime_type": "application/json",
-            "response_schema": {
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string"},
-                    "servings": {"type": "integer"},
-                    "time_minutes": {"type": "integer"},
-                    "difficulty": {"type": "integer", "minimum": 1, "maximum": 3},
-                    "ingredient_load": {"type": "integer", "minimum": 1, "maximum": 3},
-                    "tags": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "minItems": 1,
-                    },
-                    "ingredients": {"type": "array", "items": {"type": "string"}},
-                    "steps": {"type": "array", "items": {"type": "string"}},
+                    "required": [
+                        "title",
+                        "servings",
+                        "time_minutes",
+                        "difficulty",
+                        "ingredient_load",
+                        "tags",
+                        "ingredients",
+                        "steps",
+                    ],
                 },
-                "required": [
-                    "title",
-                    "servings",
-                    "time_minutes",
-                    "difficulty",
-                    "ingredient_load",
-                    "tags",
-                    "ingredients",
-                    "steps",
-                ],
             },
-        },
-    )
-    content = (getattr(resp, "text", None) or "").strip()
-    obj = json.loads(content)
-    return Recipe(**obj)
+        )
+        content = (getattr(resp, "text", None) or "").strip()
+        logger.info(f"LLM response: {content}")
+        obj = json.loads(content)
+        return Recipe(**obj)
+    except Exception as e:
+        logger.exception(f"LLM Fehler: {e}")
+        raise
