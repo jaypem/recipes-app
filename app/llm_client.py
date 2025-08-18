@@ -1,0 +1,112 @@
+import os
+import json
+import re
+from typing import List, Optional
+from .schemas import Recipe
+from google import genai
+from dotenv import load_dotenv
+
+load_dotenv()
+
+LLM_BASE = os.getenv("LLM_API_BASE", "https://generativelanguage.googleapis.com/v1beta")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-1.5-flash")
+
+# The client gets the API key from the environment variable `GEMINI_API_KEY`.
+_client: Optional[genai.Client] = None
+
+
+def _get_client() -> genai.Client:
+    global _client
+    if _client is None:
+        if not GOOGLE_API_KEY:
+            raise RuntimeError(
+                "API-Key fehlt. Setze GOOGLE_API_KEY oder LLM_API_KEY oder GEMINI_API_KEY."
+            )
+        _client = genai.Client(api_key=GOOGLE_API_KEY)
+    return _client
+
+
+def _prompt(
+    mode: str, ingredients: Optional[List[str]], difficulty: int, ingredient_load: int
+) -> str:
+    return f"""Du bist ein Kochassistent. Liefere ein einziges valides JSON-Objekt für ein Rezept.
+Anforderungen:
+- Sprache: Deutsch
+- Felder: title, servings, time_minutes, difficulty (1-3), ingredient_load (1-3),
+  tags [min 1], ingredients [List], steps [nummerierte knappe Schritte]
+- Schwierigkeit: 1=leicht, 2=mittel, 3=aufwendig
+- Zutatenmenge: 1=wenig (≈5-8), 2=mittel (≈9-14), 3=viele (15+)
+- {("Modus: ZUFALL. Ignoriere vorgegebene Zutaten." if mode == "random" else "Modus: ZUTATEN. Verwende zwingend diese Zutaten: " + ", ".join(ingredients or []))}
+- Passe das Rezept sinnvoll an die gewählte Schwierigkeit und Zutatenmenge an.
+- Übertreibe nicht mit exotischen Zutaten.
+- Ausgabe NUR JSON, keine Erklärungen.
+
+Beispielstruktur:
+{{
+  "title": "Pasta Aglio e Olio",
+  "servings": 2,
+  "time_minutes": 20,
+  "difficulty": 1,
+  "ingredient_load": 1,
+  "tags": ["pasta","schnell"],
+  "ingredients": ["200 g Spaghetti","3 Knoblauchzehen","Olivenöl","Chiliflocken","Petersilie","Salz"],
+  "steps": ["Wasser salzen und Spaghetti kochen.","Knoblauch in Öl sanft braten.","Spaghetti mit Öl, Chili, Petersilie mischen."]
+}}
+"""
+
+
+def generate_recipe(
+    mode: str, ingredients: Optional[List[str]], difficulty: int, ingredient_load: int
+) -> Recipe:
+    if not GOOGLE_API_KEY:
+        raise RuntimeError("LLM_API_KEY fehlt. Bitte in .env setzen.")
+    # Aufruf über den offiziellen Gemini-Python-Client
+    resp = _get_client().models.generate_content(
+        model=LLM_MODEL,
+        contents=[
+            {
+                "role": "user",
+                "parts": [
+                    {
+                        "text": "Du bist ein präziser Rezeptgenerator. Antworte ausschließlich mit JSON."
+                    },
+                    {"text": _prompt(mode, ingredients, difficulty, ingredient_load)},
+                ],
+            }
+        ],
+        config={
+            "temperature": 0.7,
+            "response_mime_type": "application/json",
+            "response_schema": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "servings": {"type": "integer"},
+                    "time_minutes": {"type": "integer"},
+                    "difficulty": {"type": "integer", "minimum": 1, "maximum": 3},
+                    "ingredient_load": {"type": "integer", "minimum": 1, "maximum": 3},
+                    "tags": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                    },
+                    "ingredients": {"type": "array", "items": {"type": "string"}},
+                    "steps": {"type": "array", "items": {"type": "string"}},
+                },
+                "required": [
+                    "title",
+                    "servings",
+                    "time_minutes",
+                    "difficulty",
+                    "ingredient_load",
+                    "tags",
+                    "ingredients",
+                    "steps",
+                ],
+            },
+        },
+    )
+    content = (getattr(resp, "text", None) or "").strip()
+    obj = json.loads(content)
+    return Recipe(**obj)

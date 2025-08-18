@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>💾 Gespeicherte Rezepte</h2>
+
+  <form action="/saved" method="get" class="row">
+    <input type="text" name="q" value="{{ q }}" placeholder="🔎 Stichwortsuche (FTS: mehrere Wörter getrennt eingeben)">
+    <button type="submit">Suchen</button>
+  </form>
+
+  {% if not items %}
+    <p>🤷 Keine Ergebnisse.</p>
+  {% else %}
+    <ul class="list">
+      {% for r in items %}
+        <li>
+          <a href="/recipe/{{ r.id }}">🍽️ {{ r.title }}</a>
+          <span class="meta">⏱️ {{ r.time_minutes }} Min • ⚙️ {{ r.difficulty }} • 🧾 {{ r.ingredient_load }}</span>
+          <form action="/delete/{{ r.id }}" method="post" class="inline">
+            <button type="submit" onclick="return confirm('Wirklich löschen?')">🗑️ Löschen</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}

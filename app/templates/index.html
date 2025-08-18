@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>🔀 Zufall oder 🧺 Zutaten?</h2>
+  <form action="/generate" method="post" class="card">
+    <div class="row">
+      <label><input type="radio" name="mode" value="random" checked> 🎲 Zufälliges Gericht</label>
+      <label><input type="radio" name="mode" value="ingredients"> 🧺 Gericht mit vorgegebenen Zutaten</label>
+    </div>
+
+    <div class="row">
+      <label>⚙️ Aufwand (1=🟢/3=🔴)
+        <select name="difficulty" required>
+          <option value="1">1 – leicht 🟢</option>
+          <option value="2">2 – mittel 🟡</option>
+          <option value="3">3 – aufwendig 🔴</option>
+        </select>
+      </label>
+
+      <label>🧾 Zutatenmenge
+        <select name="ingredient_load" required>
+          <option value="1">1 – wenig 🥄</option>
+          <option value="2">2 – mittel 🍽️</option>
+          <option value="3">3 – viele 🍲</option>
+        </select>
+      </label>
+    </div>
+
+    <label>🧺 Zutaten (optional, kommasepariert)</label>
+    <textarea name="ingredients" rows="3" placeholder="z.B. Hähnchenbrust, Paprika, Reis"></textarea>
+
+    <button type="submit">🔍 Rezept finden</button>
+  </form>
+{% endblock %}

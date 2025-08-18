@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>🍲 RasPi Rezept-App</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="container">
+    <h1>🍲 RasPi Rezept-App</h1>
+    <nav>
+      <a href="/">🏠 Start</a>
+      <a href="/saved">💾 Gespeichert</a>
+      <a href="https://github.com/" target="_blank" rel="noreferrer">❓</a>
+    </nav>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="container small">
+    <p>Raspberry Pi 3 • FastAPI • SQLite • LLM 💡</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+  <article class="card">
+    <h2>🍽️ {{ recipe.title }}</h2>
+    <p>👥 Portionen: <strong>{{ recipe.servings }}</strong> • ⏱️ {{ recipe.time_minutes }} Min • ⚙️ Schwierigkeit: {{ recipe.difficulty }} • 🧾 Zutatenmenge: {{ recipe.ingredient_load }}</p>
+
+    <h3>🧪 Zutaten</h3>
+    <ul>
+      {% for it in recipe.ingredients %}
+        <li>{{ it }}</li>
+      {% endfor %}
+    </ul>
+
+    <h3>🍳 Schritte</h3>
+    <ol>
+      {% for s in recipe.steps %}
+        <li>{{ s }}</li>
+      {% endfor %}
+    </ol>
+
+    <h3>🏷️ Tags</h3>
+    <p>{{ ", ".join(recipe.tags) }}</p>
+
+    <form action="/save" method="post" class="save-form">
+      <input type="hidden" name="title" value="{{ recipe.title }}">
+      <input type="hidden" name="servings" value="{{ recipe.servings }}">
+      <input type="hidden" name="time_minutes" value="{{ recipe.time_minutes }}">
+      <input type="hidden" name="difficulty" value="{{ recipe.difficulty }}">
+      <input type="hidden" name="ingredient_load" value="{{ recipe.ingredient_load }}">
+      <input type="hidden" name="tags" value="{{ ','.join(recipe.tags) }}">
+      <textarea name="ingredients" class="hidden">{% for it in recipe.ingredients %}{{ it }}
+{% endfor %}</textarea>
+      <textarea name="steps" class="hidden">{% for s in recipe.steps %}{{ s }}
+{% endfor %}</textarea>
+      <button type="submit">💾 Rezept speichern</button>
+    </form>
+  </article>
+{% endblock %}
