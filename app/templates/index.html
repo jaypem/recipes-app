@@ -1,33 +1,47 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>🔀 Zufall oder 🧺 Zutaten?</h2>
-  <form action="/generate" method="post" class="card">
-    <div class="row">
-      <label><input type="radio" name="mode" value="random" checked> 🎲 Zufälliges Gericht</label>
-      <label><input type="radio" name="mode" value="ingredients"> 🧺 Gericht mit vorgegebenen Zutaten</label>
-    </div>
+  <section class="bg-slate-800/60 rounded-2xl shadow p-6 space-y-6">
+    <h2 class="text-xl font-semibold">🔀 Zufall oder 🧺 Zutaten?</h2>
+    <form action="/generate" method="post" class="space-y-6">
+      <div class="flex flex-wrap gap-6">
+        <label class="flex items-center gap-2">
+          <input type="radio" name="mode" value="random" checked class="accent-teal-500">
+          <span>🎲 Zufälliges Gericht</span>
+        </label>
+        <label class="flex items-center gap-2">
+          <input type="radio" name="mode" value="ingredients" class="accent-teal-500">
+          <span>🧺 Gericht mit vorgegebenen Zutaten</span>
+        </label>
+      </div>
 
-    <div class="row">
-      <label>⚙️ Aufwand (1=🟢/3=🔴)
-        <select name="difficulty" required>
-          <option value="1">1 – leicht 🟢</option>
-          <option value="2">2 – mittel 🟡</option>
-          <option value="3">3 – aufwendig 🔴</option>
-        </select>
+      <div class="grid sm:grid-cols-2 gap-6">
+        <label class="block">
+          <span class="text-slate-300">⚙️ Aufwand (1=🟢/3=🔴)</span>
+          <select name="difficulty" required class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 p-2 focus:outline-none focus:ring focus:ring-teal-500">
+            <option value="1">1 – leicht 🟢</option>
+            <option value="2">2 – mittel 🟡</option>
+            <option value="3">3 – aufwendig 🔴</option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="text-slate-300">🧾 Zutatenmenge</span>
+          <select name="ingredient_load" required class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 p-2 focus:outline-none focus:ring focus:ring-teal-500">
+            <option value="1">1 – wenig 🥄</option>
+            <option value="2">2 – mittel 🍽️</option>
+            <option value="3">3 – viele 🍲</option>
+          </select>
+        </label>
+      </div>
+
+      <label class="block">
+        <span class="text-slate-300">🧺 Zutaten (optional, kommasepariert)</span>
+        <textarea name="ingredients" rows="3" placeholder="z. B. Hähnchenbrust, Paprika, Reis"
+          class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 p-3 focus:outline-none focus:ring focus:ring-teal-500"></textarea>
       </label>
 
-      <label>🧾 Zutatenmenge
-        <select name="ingredient_load" required>
-          <option value="1">1 – wenig 🥄</option>
-          <option value="2">2 – mittel 🍽️</option>
-          <option value="3">3 – viele 🍲</option>
-        </select>
-      </label>
-    </div>
-
-    <label>🧺 Zutaten (optional, kommasepariert)</label>
-    <textarea name="ingredients" rows="3" placeholder="z.B. Hähnchenbrust, Paprika, Reis"></textarea>
-
-    <button type="submit">🔍 Rezept finden</button>
-  </form>
+      <button type="submit" class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90">
+        🔍 Rezept finden
+      </button>
+    </form>
+  </section>
 {% endblock %}

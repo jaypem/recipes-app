@@ -1,38 +1,64 @@
 {% extends "base.html" %}
 {% block content %}
-  <article class="card">
-    <h2>🍽️ {{ recipe.title }}</h2>
-    <p>👥 Portionen: <strong>{{ recipe.servings }}</strong> • ⏱️ {{ recipe.time_minutes }} Min • ⚙️ Schwierigkeit: {{ recipe.difficulty }} • 🧾 Zutatenmenge: {{ recipe.ingredient_load }}</p>
+  <article class="bg-slate-800/60 rounded-2xl shadow p-6 space-y-6">
+    <header class="space-y-2">
+      <h2 class="text-2xl font-bold flex items-center gap-2">🍽️ <span>{{ recipe.title }}</span></h2>
+      <div class="flex flex-wrap gap-2 text-sm">
+        <span class="inline-flex items-center gap-1 rounded-full bg-slate-700/60 px-3 py-1">👥 {{ recipe.servings }} Portionen</span>
+        <span class="inline-flex items-center gap-1 rounded-full bg-slate-700/60 px-3 py-1">⏱️ {{ recipe.time_minutes }} Min</span>
+        <span class="inline-flex items-center gap-1 rounded-full bg-slate-700/60 px-3 py-1">⚙️ {{ recipe.difficulty }}</span>
+        <span class="inline-flex items-center gap-1 rounded-full bg-slate-700/60 px-3 py-1">🧾 {{ recipe.ingredient_load }}</span>
+      </div>
+    </header>
 
-    <h3>🧪 Zutaten</h3>
-    <ul>
-      {% for it in recipe.ingredients %}
-        <li>{{ it }}</li>
-      {% endfor %}
-    </ul>
+    <section>
+      <h3 class="text-lg font-semibold mb-2">🧪 Zutaten</h3>
+      <ul class="list-disc pl-6 space-y-1">
+        {% for it in recipe.ingredients %}
+          <li>{{ it }}</li>
+        {% endfor %}
+      </ul>
+    </section>
 
-    <h3>🍳 Schritte</h3>
-    <ol>
-      {% for s in recipe.steps %}
-        <li>{{ s }}</li>
-      {% endfor %}
-    </ol>
+    <section>
+      <h3 class="text-lg font-semibold mb-2">🍳 Schritte</h3>
+      <ol class="list-decimal pl-6 space-y-2">
+        {% for s in recipe.steps %}
+          <li>{{ s }}</li>
+        {% endfor %}
+      </ol>
+    </section>
 
-    <h3>🏷️ Tags</h3>
-    <p>{{ ", ".join(recipe.tags) }}</p>
+    <section>
+      <h3 class="text-lg font-semibold mb-2">🏷️ Tags</h3>
+      {% if recipe.tags %}
+        <div class="flex flex-wrap gap-2">
+          {% for t in recipe.tags %}
+            <span class="inline-flex items-center rounded-full bg-slate-700/60 px-3 py-1 text-sm">#{{ t }}</span>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-slate-400 text-sm">Keine Tags</p>
+      {% endif %}
+    </section>
 
-    <form action="/save" method="post" class="save-form">
+    <form action="/save" method="post" class="pt-2">
       <input type="hidden" name="title" value="{{ recipe.title }}">
       <input type="hidden" name="servings" value="{{ recipe.servings }}">
       <input type="hidden" name="time_minutes" value="{{ recipe.time_minutes }}">
       <input type="hidden" name="difficulty" value="{{ recipe.difficulty }}">
       <input type="hidden" name="ingredient_load" value="{{ recipe.ingredient_load }}">
       <input type="hidden" name="tags" value="{{ ','.join(recipe.tags) }}">
+
       <textarea name="ingredients" class="hidden">{% for it in recipe.ingredients %}{{ it }}
 {% endfor %}</textarea>
       <textarea name="steps" class="hidden">{% for s in recipe.steps %}{{ s }}
 {% endfor %}</textarea>
-      <button type="submit">💾 Rezept speichern</button>
+
+      <button type="submit"
+        class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90">
+        💾 Rezept speichern
+      </button>
     </form>
   </article>
 {% endblock %}

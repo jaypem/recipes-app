@@ -1,4 +1,5 @@
-from typing import Optional, List
+import os
+from typing import List, Optional
 from fastapi import FastAPI, Request, Form, Query
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -28,15 +29,20 @@ def index(request: Request):
 @app.post("/generate", response_class=HTMLResponse)
 def post_generate(
     request: Request,
-    mode: str = Form(...),  # "random" | "ingredients"
-    difficulty: int = Form(...),  # 1..3
-    ingredient_load: int = Form(...),  # 1..3
-    ingredients: Optional[str] = Form(None),  # comma separated
+    mode: str = Form(...),
+    difficulty: int = Form(...),
+    ingredient_load: int = Form(...),
+    ingredients: Optional[str] = Form(None),
 ):
     ing_list: List[str] = []
     if mode == "ingredients" and ingredients:
         ing_list = [s.strip() for s in ingredients.split(",") if s.strip()]
-    recipe: Recipe = generate_recipe(mode, ing_list, difficulty, ingredient_load)
+    try:
+        recipe: Recipe = generate_recipe(mode, ing_list, difficulty, ingredient_load)
+    except Exception as e:
+        return templates.TemplateResponse(
+            "index.html", {"request": request, "error": str(e)}
+        )
     return templates.TemplateResponse(
         "recipe.html", {"request": request, "recipe": recipe}
     )
@@ -89,3 +95,8 @@ def saved(request: Request, q: str = Query("", description="FTS-Suchbegriff")):
 def remove(recipe_id: int):
     delete_recipe(recipe_id)
     return RedirectResponse(url="/saved", status_code=303)
+
+
+@app.get("/health")
+def healthz():
+    return {"status": "ok"}
