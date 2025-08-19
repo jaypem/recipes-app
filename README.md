@@ -64,4 +64,4 @@ A lightweight web app for Raspberry Pi 3 to generate, search, and save recipes u
 See `.env.example` for required variables.
 
 ## License
-MIT
+BSD-3-Clause
