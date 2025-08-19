@@ -1,13 +1,15 @@
 import os
+import html
 from typing import List, Optional
-from fastapi import FastAPI, Request, Form, Query
+from fastapi import FastAPI, Request, Form, Query, File, UploadFile
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from .db import init_db, save_recipe, get_recipe, search_recipes, delete_recipe
 from .schemas import Recipe
-from .llm_client import generate_recipe
+from .llm_client import generate_recipe, extract_text_from_image
+
 
 load_dotenv()
 
@@ -100,6 +102,32 @@ def remove(recipe_id: int):
     return RedirectResponse(url="/saved", status_code=303)
 
 
+@app.get("/ocr", response_class=HTMLResponse)
+def ocr_form(request: Request):
+    """Einfache Upload-Seite für OCR (separate Template-Datei)."""
+    return templates.TemplateResponse("ocr.html", {"request": request})
+
+
+# OCR: Bild hochladen und Text extrahieren (POST)
+@app.post("/ocr", response_class=HTMLResponse)
+async def post_ocr(request: Request, file: UploadFile = File(...)):
+    """Empfängt das Bild, ruft die LLM-OCR auf und zeigt den erkannten Text an (Template)."""
+    try:
+        data = await file.read()
+        text = extract_text_from_image(
+            data, mime_type=(file.content_type or "image/jpeg")
+        )
+        return templates.TemplateResponse(
+            "ocr_result.html", {"request": request, "raw_text": text}
+        )
+    except Exception as e:
+        return templates.TemplateResponse(
+            "ocr_result.html",
+            {"request": request, "raw_text": f"Fehler: {str(e)}"},
+            status_code=400,
+        )
+
+
 @app.get("/health")
-def healthz():
+def health():
     return {"status": "ok"}

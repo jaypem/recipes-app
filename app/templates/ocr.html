@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Foto auslesen (OCR){% endblock %}
+{% block content %}
+<main class="container">
+  <h1>Foto auslesen (OCR)</h1>
+  <form method="post" action="/ocr" enctype="multipart/form-data">
+    <!-- Öffnet auf dem Handy direkt die Kamera -->
+    <input type="file" name="file" accept="image/*" capture="environment" required>
+    <button type="submit">Foto hochladen &amp; auslesen</button>
+  </form>
+  <p><a href="/">Zurück</a></p>
+</main>
+{% endblock %}

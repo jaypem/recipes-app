@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Erkannter Text{% endblock %}
+{% block content %}
+<main class="container">
+  <h1>Erkannter Text</h1>
+  <!-- Jinja autoescapes; Newlines bleiben sichtbar -->
+  <pre style="white-space: pre-wrap;">{{ raw_text }}</pre>
+  <p><a href="/ocr">Anderes Foto</a> · <a href="/">Start</a></p>
+</main>
+{% endblock %}

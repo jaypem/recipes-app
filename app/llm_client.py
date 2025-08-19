@@ -4,6 +4,7 @@ from .logger import get_logger
 from typing import List, Optional
 from .schemas import Recipe
 from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 
 
@@ -137,4 +138,33 @@ def generate_recipe(
         return Recipe(**obj)
     except Exception as e:
         logger.exception(f"LLM Fehler: {e}")
+        raise
+
+
+def extract_text_from_image(image_bytes: bytes, mime_type: str = "image/jpeg") -> str:
+    """
+    Liest Text aus einem Bild (z. B. Foto eines Notizzettels) aus und gibt den
+    erkannten Text als einfachen String zurück.
+    """
+    try:
+        client = _get_client()
+        model = os.getenv("LLM_OCR_MODEL", "gemini-2.5-flash")
+        resp = client.models.generate_content(
+            model=model,
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                types.Part.from_text(
+                    "Extrahiere den erkannten Text so wörtlich wie möglich. "
+                    "Keine Erklärungen, nur der reine Textinhalt."
+                ),
+            ],
+        )
+        content = (getattr(resp, "text", None) or "").strip()
+        logger.info(f"OCR response: {content}")
+        if not content:
+            logger.error(f"Leere OCR-Antwort: {resp}")
+            raise RuntimeError("Keine OCR-Antwort vom Modell.")
+        return content
+    except Exception as e:
+        logger.exception(f"OCR Fehler: {e}")
         raise

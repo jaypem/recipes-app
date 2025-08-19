@@ -7,7 +7,6 @@
       <input type="text" name="q" placeholder="🔎 Rezepte durchsuchen (Titel, Zutaten, Schritte)" class="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 focus:outline-none focus:ring focus:ring-teal-500">
       <button type="submit" class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90">Suchen</button>
     </form>
-
     <form action="/generate" method="post" class="space-y-6">
       <div class="flex flex-wrap gap-6">
         <label class="flex items-center gap-2">
@@ -18,6 +17,12 @@
           <input type="radio" name="mode" value="ingredients" class="accent-teal-500">
           <span>🧺 Gericht mit vorgegebenen Zutaten</span>
         </label>
+        <div class="flex">
+        <a href="/ocr" class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90 inline-flex items-center gap-2">
+            <span>📷</span>
+            <span>Foto auslesen (OCR)</span>
+        </a>
+        </div>
       </div>
 
       <div class="grid sm:grid-cols-3 gap-6">
