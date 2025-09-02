@@ -3,8 +3,58 @@
 {% block content %}
 <main class="container">
   <h1>Erkannter Text</h1>
+  {% if image_url %}
+    <div class="my-3">
+      <p class="text-slate-300 text-sm mb-2">Hochgeladenes Bild:</p>
+      <img src="{{ image_url }}" alt="Hochgeladenes Bild" class="max-h-72 rounded-lg border border-slate-700">
+    </div>
+  {% endif %}
+  {% if error %}
+    <div style="background:#7f1d1d;color:#fecaca;padding:10px;border-radius:8px;margin-bottom:10px;">
+      Fehler: {{ error }}
+    </div>
+  {% endif %}
   <!-- Jinja autoescapes; Newlines bleiben sichtbar -->
-  <pre style="white-space: pre-wrap;">{{ raw_text }}</pre>
-  <p><a href="/ocr">Anderes Foto</a> · <a href="/">Start</a></p>
+  <pre id="ocr-text" style="white-space: pre-wrap;">{{ raw_text }}</pre>
+  <div class="flex gap-2 mt-2">
+    <button type="button" id="copy-btn" class="rounded-xl bg-slate-700 px-3 py-2 text-sm hover:brightness-110">Text kopieren</button>
+    <button type="button" id="share-btn" class="rounded-xl bg-slate-700 px-3 py-2 text-sm hover:brightness-110">Teilen</button>
+  </div>
+  <form method="post" action="{{ request.url_for('ocr_parse') }}" class="mt-4" id="parse-form">
+    <textarea name="raw_text" class="hidden">{{ raw_text }}</textarea>
+    {% if image_url %}
+      <input type="hidden" name="image_url" value="{{ image_url }}">
+    {% endif %}
+    <button type="submit" data-loading="Wird interpretiert..." class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90">Als Rezept interpretieren</button>
+  </form>
+  <p class="mt-3"><a href="{{ request.url_for('ocr_form') }}">Anderes Foto</a> · <a href="{{ request.url_for('index') }}">Start</a></p>
 </main>
+<script>
+  const pre = document.getElementById('ocr-text');
+  const copyBtn = document.getElementById('copy-btn');
+  const shareBtn = document.getElementById('share-btn');
+  copyBtn?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(pre.innerText || '');
+      window.toast('Text kopiert');
+    } catch {
+      window.toast('Kopieren fehlgeschlagen');
+    }
+  });
+  shareBtn?.addEventListener('click', async () => {
+    const text = pre.innerText || '';
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'OCR Text', text });
+      } catch(_) {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(text);
+        window.toast('In Zwischenablage kopiert');
+      } catch {
+        window.toast('Teilen nicht verfügbar');
+      }
+    }
+  });
+</script>
 {% endblock %}

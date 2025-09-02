@@ -3,11 +3,31 @@
 {% block content %}
 <main class="container">
   <h1>Foto auslesen (OCR)</h1>
-  <form method="post" action="/ocr" enctype="multipart/form-data">
+  <form method="post" action="{{ request.url_for('post_ocr') }}" enctype="multipart/form-data" class="space-y-3" id="ocr-form">
     <!-- Öffnet auf dem Handy direkt die Kamera -->
-    <input type="file" name="file" accept="image/*" capture="environment" required>
-    <button type="submit">Foto hochladen &amp; auslesen</button>
+    <input type="file" name="file" id="file-input" accept="image/*" capture="environment" required class="block">
+    <div id="preview-wrap" class="hidden">
+      <p class="text-slate-300 text-sm">Vorschau:</p>
+      <img id="preview" alt="Vorschau" class="max-h-64 rounded-lg border border-slate-700">
+    </div>
+    <button type="submit" data-loading="Foto wird ausgelesen..." class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90">📤 Foto hochladen &amp; auslesen</button>
   </form>
   <p><a href="/">Zurück</a></p>
 </main>
+<script>
+  const input = document.getElementById('file-input');
+  const preview = document.getElementById('preview');
+  const wrap = document.getElementById('preview-wrap');
+  input?.addEventListener('change', () => {
+    const f = input.files && input.files[0];
+    if (f) {
+      const url = URL.createObjectURL(f);
+      preview.src = url;
+      wrap.classList.remove('hidden');
+    } else {
+      wrap.classList.add('hidden');
+      preview.removeAttribute('src');
+    }
+  });
+</script>
 {% endblock %}

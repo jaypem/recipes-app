@@ -3,11 +3,11 @@
   <section class="bg-slate-800/60 rounded-2xl shadow p-6 space-y-6">
     <h2 class="text-xl font-semibold">🔀 Zufall oder 🧺 Zutaten?</h2>
 
-    <form action="/saved" method="get" class="flex flex-col sm:flex-row gap-3 mb-4">
+    <form action="{{ request.url_for('saved') }}" method="get" class="flex flex-col sm:flex-row gap-3 mb-4">
       <input type="text" name="q" placeholder="🔎 Rezepte durchsuchen (Titel, Zutaten, Schritte)" class="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 focus:outline-none focus:ring focus:ring-teal-500">
       <button type="submit" class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90">Suchen</button>
     </form>
-    <form action="/generate" method="post" class="space-y-6">
+    <form action="{{ request.url_for('post_generate') }}" method="post" class="space-y-6">
       <div class="flex flex-wrap gap-6">
         <label class="flex items-center gap-2">
           <input type="radio" name="mode" value="random" checked class="accent-teal-500">
@@ -18,7 +18,7 @@
           <span>🧺 Gericht mit vorgegebenen Zutaten</span>
         </label>
         <div class="flex">
-        <a href="/ocr" class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90 inline-flex items-center gap-2">
+        <a href="{{ request.url_for('ocr_form') }}" class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90 inline-flex items-center gap-2">
             <span>📷</span>
             <span>Foto auslesen (OCR)</span>
         </a>

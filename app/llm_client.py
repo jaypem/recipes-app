@@ -153,7 +153,7 @@ def extract_text_from_image(image_bytes: bytes, mime_type: str = "image/jpeg") -
             model=model,
             contents=[
                 types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-                types.Part.from_text(
+                (
                     "Extrahiere den erkannten Text so wörtlich wie möglich. "
                     "Keine Erklärungen, nur der reine Textinhalt."
                 ),
@@ -167,4 +167,80 @@ def extract_text_from_image(image_bytes: bytes, mime_type: str = "image/jpeg") -
         return content
     except Exception as e:
         logger.exception(f"OCR Fehler: {e}")
+        raise
+
+
+def parse_recipe_from_text(raw_text: str) -> Recipe:
+    """
+    Konvertiert freien OCR-Text eines (mutmaßlichen) Rezepts in unser Recipe-Schema
+    mittels LLM. Falls Informationen fehlen, plausibel ergänzen. Ausgabe: reines JSON.
+    """
+    if not GOOGLE_API_KEY:
+        logger.error("LLM_API_KEY fehlt. Bitte in .env setzen.")
+        raise RuntimeError("LLM_API_KEY fehlt. Bitte in .env setzen.")
+    try:
+        logger.info("Parse OCR-Text zu Rezept via LLM")
+        client = _get_client()
+        model = os.getenv("LLM_PARSE_MODEL", LLM_MODEL)
+        resp = client.models.generate_content(
+            model=model,
+            contents=[
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": (
+                                "Du erhältst den aus einem Foto extrahierten Rezepttext. "
+                                "Strukturiere ihn in dieses JSON-Schema. Nutze exakt Deutsch. "
+                                "Wo Werte fehlen, schätze sinnvoll. Zutaten/Schritte möglichst nah am Text.\n\n"
+                            )
+                        },
+                        {"text": raw_text},
+                    ],
+                }
+            ],
+            config={
+                "temperature": 0.4,
+                "response_mime_type": "application/json",
+                "response_schema": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string"},
+                        "servings": {"type": "integer"},
+                        "time_minutes": {"type": "integer"},
+                        "difficulty": {"type": "integer", "minimum": 1, "maximum": 3},
+                        "ingredient_load": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 3,
+                        },
+                        "tags": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "minItems": 0,
+                        },
+                        "ingredients": {"type": "array", "items": {"type": "string"}},
+                        "steps": {"type": "array", "items": {"type": "string"}},
+                    },
+                    "required": [
+                        "title",
+                        "servings",
+                        "time_minutes",
+                        "difficulty",
+                        "ingredient_load",
+                        "tags",
+                        "ingredients",
+                        "steps",
+                    ],
+                },
+            },
+        )
+        content = (getattr(resp, "text", None) or "").strip()
+        logger.info(f"Parse response: {content}")
+        if not content:
+            raise RuntimeError("Leere Antwort beim Parsen des OCR-Texts")
+        obj = json.loads(content)
+        return Recipe(**obj)
+    except Exception as e:
+        logger.exception(f"Parse-Fehler: {e}")
         raise

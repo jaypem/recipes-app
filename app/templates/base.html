@@ -6,14 +6,26 @@
   <title>🍲 RasPi Rezept-App</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    /* Print styles for clean PDF/printouts */
+    @media print {
+      header, footer, nav, .no-print, #toast { display: none !important; }
+      body { color: #000 !important; background: #fff !important; }
+      .bg-slate-800\/60, .bg-slate-900, .bg-slate-700\/60 { background: #fff !important; }
+      .text-slate-100, .text-slate-300, .text-slate-400 { color: #000 !important; }
+      .border, .border-slate-700, .border-slate-700\/60 { border-color: #000 !important; }
+      .max-w-4xl { max-width: 100% !important; }
+      a::after { content: " (" attr(href) ")"; font-size: 0.9em; }
+    }
+  </style>
 
 </head>
 <body class="bg-slate-900 text-slate-100">
-  <header class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+  <header class="sticky top-0 z-40 backdrop-blur bg-slate-900/80 border-b border-slate-800 max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
     <h1 class="text-2xl font-bold">🍲 RasPi Rezept-App</h1>
     <nav class="flex items-center gap-4 text-slate-300">
-      <a class="hover:text-white" href="/">🏠 Start</a>
-      <a class="hover:text-white" href="/saved">💾 Gespeichert</a>
+      <a class="hover:text-white" href="{{ request.url_for('index') }}">🏠 Start</a>
+      <a class="hover:text-white" href="{{ request.url_for('saved') }}">💾 Gespeichert</a>
     </nav>
   </header>
   <main class="max-w-4xl mx-auto px-4 pb-10">
@@ -22,5 +34,48 @@
   <footer class="max-w-4xl mx-auto px-4 py-6 text-sm text-slate-400">
     Raspberry Pi 3 • FastAPI • SQLite • LLM 💡
   </footer>
+
+  <!-- Toaster -->
+  <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 hidden z-50 no-print">
+    <div class="bg-slate-800/90 text-slate-100 px-4 py-2 rounded-xl shadow border border-slate-700" id="toast-content"></div>
+  </div>
+
+  <script>
+    // Simple toast helper
+    window.toast = function(message, opts = {}) {
+      const el = document.getElementById('toast');
+      const content = document.getElementById('toast-content');
+      content.textContent = message;
+      el.classList.remove('hidden');
+      const dur = opts.duration || 2500;
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => el.classList.add('hidden'), dur);
+    }
+    // Toast with HTML content (use only with trusted content)
+    window.toastHTML = function(html, opts = {}) {
+      const el = document.getElementById('toast');
+      const content = document.getElementById('toast-content');
+      content.innerHTML = html;
+      el.classList.remove('hidden');
+      const dur = opts.duration || 3000;
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => el.classList.add('hidden'), dur);
+    }
+    // Submit buttons with loading state: add data-loading="..." on button
+    document.addEventListener('submit', (e) => {
+      const form = e.target;
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) {
+        const loadingText = btn.getAttribute('data-loading') || 'Bitte warten...';
+        btn.disabled = true;
+        btn.dataset.original = btn.innerHTML;
+        btn.innerHTML = `<span class="inline-flex items-center gap-2">`+
+          `<svg class=\"animate-spin h-5 w-5 text-slate-900\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\">`+
+          `<circle class=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"4\"></circle>`+
+          `<path class=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z\"></path>`+
+          `</svg><span>${loadingText}</span></span>`;
+      }
+    });
+  </script>
 </body>
 </html>

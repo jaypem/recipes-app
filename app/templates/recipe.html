@@ -2,7 +2,13 @@
 {% block content %}
   <article class="bg-slate-800/60 rounded-2xl shadow p-6 space-y-6">
     <header class="space-y-2">
-      <h2 class="text-2xl font-bold flex items-center gap-2">🍽️ <span>{{ recipe.title }}</span></h2>
+      <div class="flex items-start justify-between gap-4">
+        <h2 class="text-2xl font-bold flex items-center gap-2">🍽️ <span>{{ recipe.title }}</span></h2>
+        <div class="no-print flex items-center gap-2">
+          <a href="{{ request.url_for('saved') }}" class="rounded-xl bg-slate-700 px-3 py-2 text-sm hover:brightness-110">← Zur Liste</a>
+          <button type="button" onclick="window.print()" class="rounded-xl bg-slate-700 px-3 py-2 text-sm hover:brightness-110">🖨️ Drucken</button>
+        </div>
+      </div>
       <div class="flex flex-wrap gap-2 text-sm">
         <span class="inline-flex items-center gap-1 rounded-full bg-slate-700/60 px-3 py-1">👥 {{ recipe.servings }} Portionen</span>
         <span class="inline-flex items-center gap-1 rounded-full bg-slate-700/60 px-3 py-1">⏱️ {{ recipe.time_minutes }} Min</span>
@@ -11,23 +17,25 @@
       </div>
     </header>
 
-    <section>
-      <h3 class="text-lg font-semibold mb-2">🧪 Zutaten</h3>
-      <ul class="list-disc pl-6 space-y-1">
-        {% for it in recipe.ingredients %}
-          <li>{{ it }}</li>
-        {% endfor %}
-      </ul>
-    </section>
+    <div class="grid gap-8 md:grid-cols-2">
+      <section class="md:sticky md:top-24 self-start">
+        <h3 class="text-lg font-semibold mb-2">🧪 Zutaten</h3>
+        <ul class="list-disc pl-6 space-y-1">
+          {% for it in recipe.ingredients %}
+            <li>{{ it }}</li>
+          {% endfor %}
+        </ul>
+      </section>
 
-    <section>
-      <h3 class="text-lg font-semibold mb-2">🍳 Schritte</h3>
-      <ol class="list-decimal pl-6 space-y-2">
-        {% for s in recipe.steps %}
-          <li>{{ s }}</li>
-        {% endfor %}
-      </ol>
-    </section>
+      <section>
+        <h3 class="text-lg font-semibold mb-2">🍳 Schritte</h3>
+        <ol class="list-decimal pl-6 space-y-2">
+          {% for s in recipe.steps %}
+            <li>{{ s }}</li>
+          {% endfor %}
+        </ol>
+      </section>
+    </div>
 
     <section>
       <h3 class="text-lg font-semibold mb-2">🏷️ Tags</h3>
@@ -42,7 +50,7 @@
       {% endif %}
     </section>
 
-    <form action="/save" method="post" class="pt-2">
+    <form action="{{ request.url_for('post_save') }}" method="post" class="pt-2">
       <input type="hidden" name="title" value="{{ recipe.title }}">
       <input type="hidden" name="servings" value="{{ recipe.servings }}">
       <input type="hidden" name="time_minutes" value="{{ recipe.time_minutes }}">
@@ -55,10 +63,18 @@
       <textarea name="steps" class="hidden">{% for s in recipe.steps %}{{ s }}
 {% endfor %}</textarea>
 
-      <button type="submit"
-        class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90">
+      <button type="submit" data-loading="Wird gespeichert..." class="no-print rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90">
         💾 Rezept speichern
       </button>
     </form>
   </article>
+  <script>
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('saved') === '1') {
+        const link = {{ ('"' ~ request.url_for('saved') ~ '"') | safe }};
+        window.toastHTML(`Rezept gespeichert – <a class="underline" href="${link}">Zur Liste</a>`);
+      }
+    } catch (_) {}
+  </script>
 {% endblock %}
