@@ -1,4 +1,5 @@
 import sqlite3
+import re
 from contextlib import contextmanager
 from typing import Optional
 from .schemas import Recipe
@@ -96,9 +97,13 @@ def get_recipe(recipe_id: int) -> Optional[Recipe]:
 
 
 def search_recipes(q: str, limit: int = 25):
+    # Sanitize FTS query: replace punctuation (e.g., commas) with spaces
+    # to avoid "fts5: syntax error near ','" and similar errors.
+    # Keep unicode word characters so searches like "Käse" work.
     q = q.strip()
+    safe_q = " ".join([t for t in re.split(r"\W+", q, flags=re.UNICODE) if t])
     with get_conn() as conn:
-        if not q:
+        if not safe_q:
             rows = conn.execute(
                 "SELECT * FROM recipes ORDER BY created_at DESC LIMIT ?", (limit,)
             ).fetchall()
@@ -108,7 +113,7 @@ def search_recipes(q: str, limit: int = 25):
                        JOIN recipes r ON r.id = f.rowid
                        WHERE recipes_fts MATCH ?
                        ORDER BY bm25(recipes_fts) LIMIT ?""",
-                (q, limit),
+                (safe_q, limit),
             ).fetchall()
         out = []
         for row in rows:
