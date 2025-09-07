@@ -32,14 +32,16 @@ def index(request: Request):
 @app.post("/generate", response_class=HTMLResponse)
 def post_generate(
     request: Request,
-    mode: str = Form(...),
     difficulty: int = Form(...),
     ingredient_load: int = Form(...),
     servings: int = Form(...),
-    ingredients: Optional[str] = Form(None),
+    ingredients: Optional[str] = Form("")
 ):
+    # Infer mode from ingredients: empty -> random, else ingredients
+    has_ingredients = bool(ingredients and ingredients.strip())
+    mode = "ingredients" if has_ingredients else "random"
     ing_list: List[str] = []
-    if mode == "ingredients" and ingredients:
+    if has_ingredients:
         ing_list = [s.strip() for s in ingredients.split(",") if s.strip()]
     try:
         recipe: Recipe = generate_recipe(

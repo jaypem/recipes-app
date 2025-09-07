@@ -1,27 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
   <section class="bg-slate-800/60 rounded-2xl shadow p-6 space-y-6">
-    <h2 class="text-xl font-semibold">🔀 Zufall oder 🧺 Zutaten?</h2>
+    <h2 class="text-xl font-semibold">🍽️ Rezept generieren</h2>
 
     <form action="{{ request.url_for('saved') }}" method="get" class="flex flex-col sm:flex-row gap-3 mb-4">
       <input type="text" name="q" placeholder="🔎 Rezepte durchsuchen (Titel, Zutaten, Schritte)" class="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 focus:outline-none focus:ring focus:ring-teal-500">
       <button type="submit" class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90">Suchen</button>
     </form>
     <form action="{{ request.url_for('post_generate') }}" method="post" class="space-y-6">
-      <div class="flex flex-wrap gap-6">
-        <label class="flex items-center gap-2">
-          <input type="radio" name="mode" value="random" checked class="accent-teal-500">
-          <span>🎲 Zufälliges Gericht</span>
-        </label>
-        <label class="flex items-center gap-2">
-          <input type="radio" name="mode" value="ingredients" class="accent-teal-500">
-          <span>🧺 Gericht mit vorgegebenen Zutaten</span>
-        </label>
+      <div class="flex flex-wrap gap-6 items-center justify-between">
+        <p class="text-slate-300 text-sm">Hinweis: Zutaten leer lassen → 🎲 Zufallsrezept</p>
         <div class="flex">
-        <a href="{{ request.url_for('ocr_form') }}" class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90 inline-flex items-center gap-2">
-            <span>📷</span>
-            <span>Foto auslesen (OCR)</span>
-        </a>
+          <a href="{{ request.url_for('ocr_form') }}" class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90 inline-flex items-center gap-2">
+              <span>📷</span>
+              <span>Foto auslesen (OCR)</span>
+          </a>
         </div>
       </div>
 
@@ -56,12 +49,12 @@
 
       <label class="block">
         <span class="text-slate-300">🧺 Zutaten (optional, kommasepariert)</span>
-        <textarea name="ingredients" rows="3" placeholder="z. B. Hähnchenbrust, Paprika, Reis"
+        <textarea name="ingredients" rows="3" placeholder="Zutaten eingeben – leer lassen für Zufallsrezept (z. B. Hähnchenbrust, Paprika, Reis)"
           class="mt-2 w-full rounded-xl border border-slate-700 bg-slate-900 p-3 focus:outline-none focus:ring focus:ring-teal-500"></textarea>
       </label>
 
       <button type="submit" class="rounded-xl bg-teal-400 px-4 py-2 font-semibold text-slate-900 hover:brightness-95 active:brightness-90">
-        🔍 Rezept finden
+        🔍 Rezept generieren
       </button>
     </form>
   </section>
