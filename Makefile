@@ -31,3 +31,13 @@ copy-db:
 copy-env:
 	scp .env $(PI_USER)@$(PI_HOST):$(PI_REMOTE_PATH)
 	@echo "✅ Copied .env to $(PI_USER)@$(PI_HOST):$(PI_REMOTE_PATH)"
+
+## Update code on Raspberry Pi and rebuild/restart Docker
+pi-update:
+	ssh $(PI_USER)@$(PI_HOST) 'set -e; cd $(PI_REMOTE_PATH) && git pull --rebase && docker compose up -d --build'
+	@echo "✅ Pulled latest code and restarted containers on $(PI_HOST)"
+
+## Same as pi-update, but when already on the Pi
+pi-update-local:
+	set -e; git pull --rebase && docker compose up -d --build
+	@echo "✅ Pulled latest code and restarted containers locally"

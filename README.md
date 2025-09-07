@@ -1,23 +1,32 @@
-# 🍲 RasPi Rezept-App (FastAPI + SQLite + LLM)
+# 🍲 RasPi Recipe App (FastAPI + SQLite + LLM)
 
 A lightweight web app for Raspberry Pi 3 to generate, search, and save recipes using FastAPI, Tailwind CSS, SQLite (FTS5), and an LLM API.
 
 ## Features
-- 🎲 Zufallsrezepte oder 🧺 Zutatenbasierte Rezepte
-- ⚙️ Aufwand & 🧾 Zutatenmenge auswählbar
-- 💾 Rezepte speichern, 🔎 Volltextsuche, 🗑️ löschen
-- UI: Tailwind CSS, Emojis, Deutsch
-- LLM-Anbindung (OpenAI-kompatibel, httpx)
-- SQLite mit FTS5 für schnelle Suche
+- 🎲 Random recipes or 🧺 ingredient-based recipes
+- ⚙️ Select effort and 🧾 number of ingredients
+- 💾 Save recipes, 🔎 full-text search, 🗑️ delete
+- UI: Tailwind CSS, emojis, German language
+- LLM integration (OpenAI-compatible, via httpx)
+- SQLite with FTS5 for fast search
 
 
 ## Setup
-1. **Clone & Install**
+1. **Clone & Install (via `pyproject.toml`)**
 	```sh
 	git clone <repo-url>
 	cd recipe-app
-	pip install -r requirements.txt  # or use pyproject.toml with pip install .
-	cp .env.example .env  # Add your LLM_API_KEY
+	# Option A: with uv (uses pyproject + uv.lock)
+	uv sync
+	. .venv/bin/activate
+
+	# Option B: with pip (reads pyproject.toml)
+	python -m venv .venv
+	. .venv/bin/activate
+	pip install .
+
+	# Environment config
+	cp .env.example .env  # add your LLM_API_KEY
 	```
 2. **Start locally**
 	```sh
@@ -27,7 +36,7 @@ A lightweight web app for Raspberry Pi 3 to generate, search, and save recipes u
 	```sh
 	docker-compose up --build
 	```
-	or use the Makefile:
+	or via Makefile:
 	```sh
 	make docker-up
 	```
@@ -50,15 +59,15 @@ A lightweight web app for Raspberry Pi 3 to generate, search, and save recipes u
 	```
 	Example: `http://192.168.1.42:8000`
 
-**Note:**
-- Both devices must be on the same Wi-Fi/network.
+**Notes**
+- Both devices must be on the same Wi‑Fi/network.
 - If you have a firewall on your Pi, ensure port 8000 is open.
 - If you use Docker Desktop on Mac/Windows, replace `<raspberry-pi-ip>` with your host’s IP.
 
 ## Deployment
 - Precompile Tailwind CSS for Pi (see `app/static/styles.css`).
-- Restrict CORS to LAN.
-- DB-Backup: Copy `recipes.db` regularly.
+- Restrict CORS to the LAN.
+- DB backup: copy `recipes.db` regularly.
 
 ## .env
 See `.env.example` for required variables.
